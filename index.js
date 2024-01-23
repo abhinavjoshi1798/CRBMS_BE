@@ -2,21 +2,24 @@ const express = require("express");
 const { connection } = require("./db");
 const { userRouter } = require("./routes/User.routes");
 const { adminRouter } = require("./routes/Admin.routes");
-// const { auth } = require("./middleweare/auth.middleware");
-// const {noteRouter} = require("./routes/Notes.routes")
+const { auth } = require("./middleweare/auth.middleware");
 const cors = require("cors");
-require("dotenv").config()
+const { adminValidator } = require("./middleweare/adminValidator.middleware");
+const { employeeValidator } = require("./middleweare/employeeValidator.middleware");
+const { employeeRouter } = require("./routes/Employee.routes");
+require("dotenv").config();
 
 const app = express();
 
-app.use(cors())
+app.use(cors());
 app.use(express.json());
+
 app.use("/users", userRouter);
-app.use("/admin", adminRouter);
 
 //Protected Routes
-// app.use(auth);
-// app.use("/notes",noteRouter)
+app.use(auth);
+app.use("/admin", adminValidator, adminRouter);
+app.use("/employee", employeeValidator, employeeRouter);
 
 app.listen(process.env.port, async () => {
   try {
