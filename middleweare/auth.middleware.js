@@ -8,7 +8,7 @@ const auth = (req, res, next) => {
             const decoded = jwt.verify(token, process.env.secretKey);
             if (decoded) {
                 console.log(decoded);
-                req.body.userId = decoded.authorId;
+                req.body.userId = decoded.userId;
                 req.body.role = decoded.role;
                 next();
             } else {

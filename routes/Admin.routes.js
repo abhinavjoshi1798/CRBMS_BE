@@ -51,8 +51,12 @@ adminRouter.post("/room", async (req, res) => {
 
 adminRouter.get("/userdata", async (req, res) => {
   try {
+    const userObj = await UserModel.findOne({ _id: req.body.userId });
     const userdata = await UserModel.find({ role: "employee" });
-    res.status(200).send(userdata);
+    res.status(200).send({
+      "UsersData": userdata,
+      "user": userObj
+    });
   } catch (err) {
     res.status(400).send({ err: err.message });
   }
