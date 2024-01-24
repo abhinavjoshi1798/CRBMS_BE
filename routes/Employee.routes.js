@@ -8,7 +8,7 @@ const employeeRouter = express.Router();
 
 employeeRouter.get("/dashboard", async (req, res) => {
   try {
-    const userObj = await UserModel.findOne({ _id: req.body.userId });
+    const userObj = await UserModel.findOne({ _id: req.body.loggedInUserId });
     const conferenceRoomData = await RoomModel.find({ category: "cr" });
     const meetingRoomData = await RoomModel.find({ category: "mr" });
 
