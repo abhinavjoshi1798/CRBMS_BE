@@ -24,6 +24,28 @@ employeeRouter.get("/dashboard", async (req, res) => {
   }
 });
 
+employeeRouter.patch("/dashboard/:roomId", async (req, res) => {
+  const { roomId } = req.params;
+  const newBooking = req.body.newBooking;
+  try {
+    const room = await RoomModel.findById(roomId);
+
+    if (!room) {
+      return res.status(404).json({ error: "Room not found" });
+    }
+
+    // Add the new booking to the bookings array
+    room.bookings.push(newBooking);
+
+    // Save the updated room
+    const updatedRoom = await room.save();
+
+    res.json(updatedRoom);
+  } catch (err) {
+    res.status(400).send({ err: err.message });
+  }
+});
+
 module.exports = {
-  employeeRouter
+  employeeRouter,
 };

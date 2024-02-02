@@ -7,7 +7,7 @@ const employeeValidator = (req, res, next) => {
         try {
             const decoded = jwt.verify(token, process.env.secretKey);
             if (decoded) {
-                console.log(decoded);
+                // console.log(decoded);
                 if (decoded.role === "employee") {
                     next();
                 } else {
