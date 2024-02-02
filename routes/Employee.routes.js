@@ -35,6 +35,25 @@ employeeRouter.get("/dashboard/:roomId",async (req,res)=>{
   }
 })
 
+employeeRouter.get("/dashboard/:roomId/:selectedDate",async (req,res)=> {
+const {roomId,selectedDate}= req.params;
+try{
+  const bookings = await BookingModel.find({ roomId: roomId });
+  const bookingsOnTargetDate = bookings.filter(booking => booking.Date === selectedDate);
+  if(bookingsOnTargetDate.length===0){
+    res.status(200).send({"msg":"There are no bookings on this particular date"})  
+  }else{
+    res.status(200).send({"bookings":bookingsOnTargetDate})
+  }
+}catch(err){
+  res.status(400).send({ err: err.message });
+}
+
+
+
+
+})
+
 employeeRouter.post("/dashboard/:roomId", async (req, res) => {
   const {roomId} = req.params
   const bookingObj = {
