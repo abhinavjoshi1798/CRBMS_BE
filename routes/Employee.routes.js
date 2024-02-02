@@ -27,6 +27,12 @@ employeeRouter.get("/dashboard", async (req, res) => {
 
 employeeRouter.get("/dashboard/:roomId",async (req,res)=>{
   const {roomId} = req.params
+  try{
+    const bookings = await BookingModel.find({ roomId: roomId });
+    res.status(200).send({"bookings":bookings})
+  }catch (err) {
+    res.status(400).send({ err: err.message });
+  }
 })
 
 employeeRouter.post("/dashboard/:roomId", async (req, res) => {
