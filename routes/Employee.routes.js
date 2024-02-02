@@ -3,6 +3,7 @@ const express = require("express");
 require("dotenv").config();
 const { RoomModel } = require("../model/Room.model");
 const { UserModel } = require("../model/User.model");
+const { BookingModel } = require("../model/Booking.model");
 
 const employeeRouter = express.Router();
 
@@ -24,23 +25,29 @@ employeeRouter.get("/dashboard", async (req, res) => {
   }
 });
 
-employeeRouter.patch("/dashboard/:roomId", async (req, res) => {
-  const { roomId } = req.params;
-  const newBooking = req.body.newBooking;
+employeeRouter.get("/dashboard/:roomId",async (req,res)=>{
+  const {roomId} = req.params
+})
+
+employeeRouter.post("/dashboard/:roomId", async (req, res) => {
+  const {roomId} = req.params
+  const bookingObj = {
+    Date: req.body.Date,
+    timeIn: req.body.timeIn,
+    timeOut: req.body.timeOut,
+    bookingUserId: req.body.loggedInUserId,
+    roomId: roomId,
+    meetingTitle: req.body.meetingTitle,
+    meetingDetails: req.body.meetingDetails,
+    meetingParticipants: req.body.meetingParticipants,
+    numberOfParticipants: req.body.numberOfParticipants,
+  };
+
   try {
-    const room = await RoomModel.findById(roomId);
-
-    if (!room) {
-      return res.status(404).json({ error: "Room not found" });
-    }
-
-    // Add the new booking to the bookings array
-    room.bookings.push(newBooking);
-
-    // Save the updated room
-    const updatedRoom = await room.save();
-
-    res.json(updatedRoom);
+    console.log(req.body)
+    const booking = new BookingModel(bookingObj);
+    await booking.save();
+    res.status(200).send({ msg: "Booking has been made" });
   } catch (err) {
     res.status(400).send({ err: err.message });
   }
@@ -49,3 +56,8 @@ employeeRouter.patch("/dashboard/:roomId", async (req, res) => {
 module.exports = {
   employeeRouter,
 };
+
+
+
+
+

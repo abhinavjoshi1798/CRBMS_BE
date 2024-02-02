@@ -7,9 +7,7 @@ const auth = (req, res, next) => {
         try {
             const decoded = jwt.verify(token, process.env.secretKey);
             if (decoded) {
-                // console.log(decoded);
                 req.body.loggedInUserId = decoded.userId;
-                req.body.loggedInUserRole = decoded.role;
                 next();
             } else {
                 res.send({ "msg": "Please Login!!" })
