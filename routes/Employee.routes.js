@@ -1,7 +1,7 @@
 // routes are controller only . MVC Model
 const express = require("express");
 require("dotenv").config();
-const moment = require('moment');
+const moment = require("moment");
 const { RoomModel } = require("../model/Room.model");
 const { UserModel } = require("../model/User.model");
 const { BookingModel } = require("../model/Booking.model");
@@ -31,19 +31,15 @@ employeeRouter.get("/dashboard/:roomId", async (req, res) => {
   try {
     const bookings = await BookingModel.find({ roomId: roomId });
 
-
     bookings.sort((a, b) => {
-      const dateTimeA = moment(`${a.Date} ${a.timeIn}`, 'DD-MM-YYYY hh:mm A');
-      const dateTimeB = moment(`${b.Date} ${b.timeIn}`, 'DD-MM-YYYY hh:mm A');
+      const dateTimeA = moment(`${a.Date} ${a.timeIn}`, "DD-MM-YYYY hh:mm A");
+      const dateTimeB = moment(`${b.Date} ${b.timeIn}`, "DD-MM-YYYY hh:mm A");
       const dateComparison = dateTimeB.diff(dateTimeA);
       if (dateComparison !== 0) {
         return dateComparison;
       }
-      return dateTimeB.diff(dateTimeA, 'seconds');
+      return dateTimeB.diff(dateTimeA, "seconds");
     });
-
-
-
     res.status(200).send({ bookings: bookings });
   } catch (err) {
     res.status(400).send({ err: err.message });
