@@ -8,7 +8,8 @@ const bookingSchema = mongoose.Schema({
     meetingTitle:{type:String,required:true},
     meetingDetails:{type:String,required:true},
     meetingParticipants:{ type: [String], required: true },
-    numberOfParticipants:{type:Number,required:true}
+    numberOfParticipants:{type:Number,required:true},
+    isCancelled:{type:Boolean,require:true}
 },   { 
     versionKey:false
 })

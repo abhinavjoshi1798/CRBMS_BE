@@ -7,6 +7,7 @@ const cors = require("cors");
 const { adminValidator } = require("./middleweare/adminValidator.middleware");
 const { employeeValidator } = require("./middleweare/employeeValidator.middleware");
 const { employeeRouter } = require("./routes/Employee.routes");
+const { bookingRouter } = require("./routes/Bookings.routes");
 require("dotenv").config();
 
 const app = express();
@@ -20,6 +21,7 @@ app.use("/users", userRouter);
 app.use(auth);
 app.use("/admin", adminValidator, adminRouter);
 app.use("/employee", employeeValidator, employeeRouter);
+app.use("/bookings", employeeValidator, bookingRouter);
 
 app.listen(process.env.port, async () => {
   try {

@@ -1,4 +1,3 @@
-// routes are controller only . MVC Model
 const express = require("express");
 const { UserModel } = require("../model/User.model");
 const jwt = require("jsonwebtoken");

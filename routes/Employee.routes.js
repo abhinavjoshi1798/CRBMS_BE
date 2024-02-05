@@ -1,10 +1,11 @@
-// routes are controller only . MVC Model
 const express = require("express");
 require("dotenv").config();
 const moment = require("moment");
 const { RoomModel } = require("../model/Room.model");
 const { UserModel } = require("../model/User.model");
 const { BookingModel } = require("../model/Booking.model");
+
+const nodemailer = require("nodemailer");
 
 const employeeRouter = express.Router();
 
@@ -77,12 +78,41 @@ employeeRouter.post("/dashboard/:roomId", async (req, res) => {
     meetingDetails: req.body.meetingDetails,
     meetingParticipants: req.body.meetingParticipants,
     numberOfParticipants: req.body.numberOfParticipants,
+    isCancelled:false
   };
   try {
-    console.log(req.body);
     const booking = new BookingModel(bookingObj);
     await booking.save();
-    res.status(200).send({ msg: "Booking has been made" });
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "abhinavjoshi1798@gmail.com",
+        pass: "zboy mvtn kjle ycmc",
+      },
+    });
+
+    for (let i = 0; i < req.body.meetingParticipants.length; i++) {
+      const participantEmail = req.body.meetingParticipants[i];
+      const mailOptions = {
+        from: "abhinavjoshi1798@gmail.com",
+        to: participantEmail,
+        subject: "Meeting Invitation: " + req.body.meetingTitle,
+        text: `Dear Sir/Mam\nYou are invited to a meeting titled ${req.body.meetingTitle}\nscheduled on ${req.body.Date} from ${req.body.timeIn} to ${req.body.timeOut}.\nMeeting details: ${req.body.meetingDetails}`,
+      };
+
+      transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+          console.log(`Error sending email to ${participantEmail}: ${error}`);
+        } else {
+          console.log(`Email sent to ${participantEmail}: ${info.response}`);
+        }
+      });
+    }
+
+    res
+      .status(200)
+      .send({ msg: "Booking has been made, and emails sent to participants" });
   } catch (err) {
     res.status(400).send({ err: err.message });
   }
