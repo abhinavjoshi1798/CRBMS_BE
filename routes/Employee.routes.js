@@ -87,15 +87,15 @@ employeeRouter.post("/dashboard/:roomId", async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "abhinavjoshi1798@gmail.com",
-        pass: "zboy mvtn kjle ycmc",
+        user: "a76102338@gmail.com",
+        pass: "anpc bwxl vaec qstg",
       },
     });
 
     for (let i = 0; i < req.body.meetingParticipants.length; i++) {
       const participantEmail = req.body.meetingParticipants[i];
       const mailOptions = {
-        from: "abhinavjoshi1798@gmail.com",
+        from: "a76102338@gmail.com",
         to: participantEmail,
         subject: "Meeting Invitation: " + req.body.meetingTitle,
         text: `Dear Sir/Mam\nYou are invited to a meeting titled ${req.body.meetingTitle}\nscheduled on ${req.body.Date} from ${req.body.timeIn} to ${req.body.timeOut}.\nMeeting details: ${req.body.meetingDetails}`,
