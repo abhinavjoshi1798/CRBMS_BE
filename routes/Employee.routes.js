@@ -78,7 +78,7 @@ employeeRouter.post("/dashboard/:roomId", async (req, res) => {
     meetingDetails: req.body.meetingDetails,
     meetingParticipants: req.body.meetingParticipants,
     numberOfParticipants: req.body.numberOfParticipants,
-    isCancelled:false
+    isCancelled: false,
   };
   try {
     const booking = new BookingModel(bookingObj);

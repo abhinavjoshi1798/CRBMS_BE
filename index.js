@@ -2,10 +2,12 @@ const express = require("express");
 const { connection } = require("./db");
 const { userRouter } = require("./routes/User.routes");
 const { adminRouter } = require("./routes/Admin.routes");
-const { auth } = require("./middleweare/auth.middleware");
+const { auth } = require("./middleware/auth.middleware");
 const cors = require("cors");
-const { adminValidator } = require("./middleweare/adminValidator.middleware");
-const { employeeValidator } = require("./middleweare/employeeValidator.middleware");
+const { adminValidator } = require("./middleware/adminValidator.middleware");
+const {
+  employeeValidator,
+} = require("./middleware/employeeValidator.middleware");
 const { employeeRouter } = require("./routes/Employee.routes");
 const { bookingRouter } = require("./routes/Bookings.routes");
 require("dotenv").config();
