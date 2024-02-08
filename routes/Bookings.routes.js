@@ -162,5 +162,3 @@ bookingRouter.patch("/update/:_id", async (req, res) => {
 module.exports = {
   bookingRouter,
 };
-
-// abc
