@@ -21,33 +21,30 @@ bookingRouter.get("/:employeeId", async (req, res) => {
         const room = await RoomModel.findById(booking.roomId);
         const userDetails = await UserModel.findById(booking.bookingUserId);
         return {
-          _id: booking._id,
-          Date: booking.Date,
-          timeIn: booking.timeIn,
-          timeOut: booking.timeOut,
-          bookingUserId: booking.bookingUserId,
-          roomId: booking.roomId,
-          meetingTitle: booking.meetingTitle,
-          meetingDetails: booking.meetingDetails,
-          meetingParticipants: booking.meetingParticipants,
-          numberOfParticipants: booking.numberOfParticipants,
-          isCancelled: booking.isCancelled,
-          roomCategory: room.category,
-          roomName: room.name,
-          roomFloor: room.floor,
-          roomDescription: room.description,
-          roomSitingCapacity: room.seater,
-          roomCity: room.city,
-          roomBuilding: room.building,
-          bookedBy: userDetails.name,
-          bookedPersonEmail: userDetails.email,
-          bookedPersonRole: userDetails.role,
-          bookedPersonEmployeeId: userDetails.employeeId,
-          bookedPersonCity: userDetails.city,
-          bookedPersonBuilding: userDetails.building,
-          // booking:booking,
-          // room: room,
-          // userDetails: userDetails
+          _id: booking?._id,
+          Date: booking?.Date,
+          timeIn: booking?.timeIn,
+          timeOut: booking?.timeOut,
+          bookingUserId: booking?.bookingUserId,
+          roomId: booking?.roomId,
+          meetingTitle: booking?.meetingTitle,
+          meetingDetails: booking?.meetingDetails,
+          meetingParticipants: booking?.meetingParticipants,
+          numberOfParticipants: booking?.numberOfParticipants,
+          isCancelled: booking?.isCancelled,
+          roomCategory: room?.category,
+          roomName: room?.name,
+          roomFloor: room?.floor,
+          roomDescription: room?.description,
+          roomSitingCapacity: room?.seater,
+          roomCity: room?.city,
+          roomBuilding: room?.building,
+          bookedBy: userDetails?.name,
+          bookedPersonEmail: userDetails?.email,
+          bookedPersonRole: userDetails?.role,
+          bookedPersonEmployeeId: userDetails?.employeeId,
+          bookedPersonCity: userDetails?.city,
+          bookedPersonBuilding: userDetails?.building,
         };
       })
     );
@@ -106,6 +103,34 @@ bookingRouter.patch("/cancel/:_id", async (req, res) => {
   }
 });
 
+// bookingRouter.get("/details/:bookingId", async (req, res) => {
+//   const { bookingId } = req.params;
+//   try {
+//     const bookingdetail = await BookingModel.findById({ _id: bookingId })
+//     if (bookingdetail) {
+//       res.status(200).send({ bookingdetails: bookingdetail })
+//     }
+//   } catch (err) {
+//     res.status(400).send({ err: err.message });
+//   }
+// })
+
+
+bookingRouter.get("/details/:bookingId", async (req, res) => {
+  const { bookingId } = req.params;
+  try {
+    const bookingdetail = await BookingModel.findById(bookingId); 
+    if (bookingdetail) {
+      res.status(200).send({ bookingdetails: bookingdetail });
+    } else {
+      res.status(404).send({ error: "Booking not found" }); 
+    }
+  } catch (err) {
+    res.status(500).send({ error: err.message }); 
+  }
+});
+
+
 bookingRouter.patch("/update/:_id", async (req, res) => {
   const { _id } = req.params;
   try {
@@ -115,6 +140,7 @@ bookingRouter.patch("/update/:_id", async (req, res) => {
     }
 
     const newBooking = {
+      // user should not be able to update the date
       Date: req.body.Date,
       timeIn: req.body.timeIn,
       timeOut: req.body.timeOut,
