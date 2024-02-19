@@ -10,6 +10,9 @@ const bookingSchema = mongoose.Schema({
     meetingParticipants:{ type: [String], required: true },
     numberOfParticipants:{type:Number,required:true},
     isCancelled:{type:Boolean,require:true},
+    new:{type:Boolean,require:true},
+    dateCreated: { type: Date, default: Date.now }
+
 },   { 
     versionKey:false
 })

@@ -4,54 +4,70 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 const userRegistration = async (req, res) => {
-  const { name, email, pass, role, employeeId, city, building } = req.body;
   try {
-    bcrypt.hash(pass, 5, async (err, hash) => {
-      const user = new UserModel({
-        name,
-        email,
-        pass: hash,
-        role,
-        employeeId,
-        city,
-        building,
-      });
-      await user.save();
-      res.status(200).send({ msg: "New user has been registered" });
+    const { name, email, pass, role, employeeId, city, building } = req.body;
+
+    // Hash the password using bcrypt
+    const hash = await bcrypt.hash(pass, 5);
+
+    // Create a new user instance
+    const user = new UserModel({
+      name,
+      email,
+      pass: hash,
+      role,
+      employeeId,
+      city,
+      building,
     });
+
+    // Save the user to the database
+    await user.save();
+
+    // Respond with success message
+    res.status(200).send({ msg: "New user has been registered" });
   } catch (err) {
-    res.status(400).send({ err: err.message });
+    // Handle errors
+    res.status(400).send({ error: err.message });
   }
 };
 
 const userLogin = async (req, res) => {
-  const { employeeId, pass } = req.body;
   try {
+    const { employeeId, pass } = req.body;
+
+    // Find user by employeeId
     const user = await UserModel.findOne({ employeeId });
+
     if (user) {
-      bcrypt.compare(pass, user.pass, (err, result) => {
-        if (result) {
-          const token = jwt.sign(
-            {
-              userId: user._id,
-              role: user.role,
-            },
-            process.env.secretKey
-          );
-          // backend is a random payload . used to encode the token
-          // masai is the secret key which is used to decode the token
-          res
-            .status(200)
-            .send({ msg: "Login Successful", token: token, role: user.role });
-        } else {
-          res.status(200).send({ msg: "Wrong Credentials!!!" });
-        }
-      });
+      // Compare passwords
+      const passwordMatch = await bcrypt.compare(pass, user.pass);
+
+      if (passwordMatch) {
+        // Generate JWT token
+        const token = jwt.sign(
+          {
+            userId: user._id,
+            role: user.role,
+          },
+          process.env.secretKey
+        );
+
+        // Respond with success message and token
+        res
+          .status(200)
+          .send({ msg: "Login Successful", token, role: user.role });
+      } else {
+        // Respond with incorrect credentials message
+        res.status(401).send({ error: "Wrong Credentials!!!" });
+      }
     } else {
-      res.status(200).send({ msg: "Wrong Credentials!!!" });
+      // Respond with incorrect credentials message
+      res.status(401).send({ error: "Wrong Credentials!!!" });
     }
   } catch (err) {
-    res.status(400).send({ err: err.message });
+    // Handle errors
+    res.status(500).send({ error: err.message });
   }
 };
 

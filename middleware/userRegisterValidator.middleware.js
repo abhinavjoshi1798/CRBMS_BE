@@ -1,20 +1,31 @@
 const validator = require("email-validator");
 
 const userRegisterValidator = (req, res, next) => {
-  const { name, email, pass, role, employeeId, city, building } = req.body;
+  try {
+    const { name, email, pass, role, employeeId, city, building } = req.body;
 
-  if (!name || !email || !pass || !role || !employeeId || !city || !building) {
-    return res.status(400).json({
-      err: "Few fields are missing, cannot process the request",
-    });
-  } else if (!validator.validate(email)) {
-    return res.status(400).json({
-      err: "Email is invalid",
-    });
+    // Check if required fields are missing
+    if (!name || !email || !pass || !role || !employeeId || !city || !building) {
+      return res.status(400).json({
+        error: "Missing fields, unable to process the request",
+      });
+    }
+
+    // Validate email format
+    if (!validator.validate(email)) {
+      return res.status(400).json({
+        error: "Invalid email format",
+      });
+    }
+
+    // If all checks pass, move to the next middleware
+    next();
+  } catch (err) {
+    // Log the error for debugging
+    console.error("Error in userRegisterValidator:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
-  next();
 };
-
 
 module.exports = {
   userRegisterValidator,

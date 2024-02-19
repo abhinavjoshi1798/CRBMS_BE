@@ -1,12 +1,20 @@
 const userLoginValidator = (req, res, next) => {
-  const { employeeId, pass } = req.body;
+  try {
+    const { employeeId, pass } = req.body;
 
-  if (!employeeId || !pass) {
-    return res.status(400).json({
-      err: "Few fields are missing, cannot process the request",
-    });
+    // Check if required fields are missing
+    if (!employeeId || !pass) {
+      return res.status(400).json({
+        error: "Missing fields, unable to process the request",
+      });
+    }
+
+    // If all checks pass, move to the next middleware
+    next();
+  } catch (err) {
+    // Handle any errors
+    res.status(500).json({ error: err.message });
   }
-  next();
 };
 
 module.exports = {

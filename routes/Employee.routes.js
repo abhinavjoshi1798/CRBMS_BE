@@ -11,7 +11,16 @@ const employeeRouter = express.Router();
 
 employeeRouter.get("/dashboard", async (req, res) => {
   try {
-    const userObj = await UserModel.findOne({ _id: req.body.loggedInUserId });
+    const loggedInUserId = req.body.loggedInUserId; // Assuming loggedInUserId is sent in the request body
+    if (!loggedInUserId) {
+      return res.status(400).send({ error: "loggedInUserId is required" });
+    }
+
+    const userObj = await UserModel.findOne({ _id: loggedInUserId });
+    if (!userObj) {
+      return res.status(404).send({ error: "User not found" });
+    }
+
     const conferenceRoomData = await RoomModel.find({ category: "cr" });
     const meetingRoomData = await RoomModel.find({ category: "mr" });
 
@@ -23,64 +32,132 @@ employeeRouter.get("/dashboard", async (req, res) => {
       user: userObj,
     });
   } catch (err) {
-    res.status(400).send({ err: err.message });
+    console.error("Error in employee/dashboard/ endpoint:", err);
+    res.status(500).send({ error: "Internal server error" });
   }
 });
 
 employeeRouter.get("/dashboard/:roomId", async (req, res) => {
   const { roomId } = req.params;
   try {
-    const bookings = await BookingModel.find({ roomId: roomId });
+    if (!roomId) {
+      return res.status(400).send({ error: "Room ID is required" });
+    }
+
+    const bookings = await BookingModel.find({ roomId , isCancelled:false});
+    
+  
+
+    if (!bookings || bookings.length === 0) {
+      return res.status(404).send({ error: "No bookings found for this room" });
+    }
 
     bookings.sort((a, b) => {
       const dateTimeA = moment(`${a.Date} ${a.timeIn}`, "DD-MM-YYYY hh:mm A");
       const dateTimeB = moment(`${b.Date} ${b.timeIn}`, "DD-MM-YYYY hh:mm A");
-      const dateComparison = dateTimeB.diff(dateTimeA);
-      if (dateComparison !== 0) {
-        return dateComparison;
-      }
-      return dateTimeB.diff(dateTimeA, "seconds");
+      return dateTimeB.diff(dateTimeA);
     });
-    res.status(200).send({ bookings: bookings });
+
+    res.status(200).send({ bookings });
   } catch (err) {
-    res.status(400).send({ err: err.message });
+    console.error("Error in /dashboard/:roomId endpoint:", err);
+    res.status(500).send({ error: "Internal server error" });
   }
 });
 
 employeeRouter.get("/dashboard/:roomId/:selectedDate", async (req, res) => {
   const { roomId, selectedDate } = req.params;
   try {
-    const bookings = await BookingModel.find({ roomId: roomId });
+    if (!roomId || !selectedDate) {
+      return res
+        .status(400)
+        .send({ error: "Room ID and selected date are required" });
+    }
+
+    const bookings = await BookingModel.find({ roomId, isCancelled:false });
     const bookingsOnTargetDate = bookings.filter(
       (booking) => booking.Date === selectedDate
     );
+
     if (bookingsOnTargetDate.length === 0) {
-      res
+      return res
         .status(200)
         .send({ msg: "There are no bookings on this particular date" });
-    } else {
-      res.status(200).send({ bookings: bookingsOnTargetDate });
     }
+
+    res.status(200).send({ bookings: bookingsOnTargetDate });
   } catch (err) {
-    res.status(400).send({ err: err.message });
+    console.error("Error in /dashboard/:roomId/:selectedDate endpoint:", err);
+    res.status(500).send({ error: "Internal server error" });
   }
 });
 
 employeeRouter.post("/dashboard/:roomId", async (req, res) => {
   const { roomId } = req.params;
-  const bookingObj = {
-    Date: req.body.Date,
-    timeIn: req.body.timeIn,
-    timeOut: req.body.timeOut,
-    bookingUserId: req.body.loggedInUserId,
-    roomId: roomId,
-    meetingTitle: req.body.meetingTitle,
-    meetingDetails: req.body.meetingDetails,
-    meetingParticipants: req.body.meetingParticipants,
-    numberOfParticipants: req.body.numberOfParticipants,
-    isCancelled: false,
-  };
+  const {
+    Date,
+    timeIn,
+    timeOut,
+    loggedInUserId,
+    meetingTitle,
+    meetingDetails,
+    meetingParticipants,
+    numberOfParticipants,
+  } = req.body;
+
   try {
+    if (
+      !Date ||
+      !timeIn ||
+      !timeOut ||
+      !loggedInUserId ||
+      !meetingTitle ||
+      !meetingParticipants ||
+      !numberOfParticipants
+    ) {
+      return res
+        .status(400)
+        .send({ error: "Missing required fields for booking" });
+    }
+
+    const existingBooking = await BookingModel.findOne({
+      roomId,
+      Date,
+      $or: [
+        {
+          $and: [
+            { timeIn: { $lte: timeIn } },
+            { timeOut: { $gt: timeIn } }
+          ]
+        },
+        {
+          $and: [
+            { timeIn: { $lt: timeOut } },
+            { timeOut: { $gte: timeOut } }
+          ]
+        }
+      ]
+    });
+
+    if (existingBooking) {
+      return res.status(400).send({ error: "There is a conflicting booking for the same room and time slot." });
+    }
+
+    const bookingObj = {
+      Date, // From FE
+      timeIn, // From FE
+      timeOut, // From FE
+      bookingUserId: loggedInUserId, // From Auth Middleware
+      roomId, //From Params
+      meetingTitle, // From FE
+      meetingDetails, // From FE
+      meetingParticipants, // From FE
+      numberOfParticipants, // From FE
+      isCancelled: false, // Created Here only
+      new:false, // Created Here only
+      dateCreated:Date.now // Created Here only
+    };
+
     const booking = new BookingModel(bookingObj);
     await booking.save();
 
@@ -92,18 +169,17 @@ employeeRouter.post("/dashboard/:roomId", async (req, res) => {
       },
     });
 
-    for (let i = 0; i < req.body.meetingParticipants.length; i++) {
-      const participantEmail = req.body.meetingParticipants[i];
+    for (const participantEmail of meetingParticipants) {
       const mailOptions = {
         from: "a76102338@gmail.com",
         to: participantEmail,
-        subject: "Meeting Invitation: " + req.body.meetingTitle,
-        text: `Dear Sir/Mam\nYou are invited to a meeting titled ${req.body.meetingTitle}\nscheduled on ${req.body.Date} from ${req.body.timeIn} to ${req.body.timeOut}.\nMeeting details: ${req.body.meetingDetails}`,
+        subject: "Meeting Invitation: " + meetingTitle,
+        text: `Dear Sir/Mam,\n\nYou are invited to a meeting titled ${meetingTitle}\nscheduled on ${Date} from ${timeIn} to ${timeOut}.\n\nMeeting details: ${meetingDetails}`,
       };
 
       transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
-          console.log(`Error sending email to ${participantEmail}: ${error}`);
+          console.error(`Error sending email to ${participantEmail}: ${error}`);
         } else {
           console.log(`Email sent to ${participantEmail}: ${info.response}`);
         }
@@ -114,7 +190,8 @@ employeeRouter.post("/dashboard/:roomId", async (req, res) => {
       .status(200)
       .send({ msg: "Booking has been made, and emails sent to participants" });
   } catch (err) {
-    res.status(400).send({ err: err.message });
+    console.error("Error in /dashboard/:roomId POST endpoint:", err);
+    res.status(500).send({ error: "Internal server error" });
   }
 });
 

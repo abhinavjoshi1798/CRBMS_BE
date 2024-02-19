@@ -5,11 +5,10 @@ const { adminRouter } = require("./routes/Admin.routes");
 const { auth } = require("./middleware/auth.middleware");
 const cors = require("cors");
 const { adminValidator } = require("./middleware/adminValidator.middleware");
-const {
-  employeeValidator,
-} = require("./middleware/employeeValidator.middleware");
+const { employeeValidator } = require("./middleware/employeeValidator.middleware");
 const { employeeRouter } = require("./routes/Employee.routes");
 const { bookingRouter } = require("./routes/Bookings.routes");
+const { reportRouter } = require("./routes/Report.routes");
 require("dotenv").config();
 
 const app = express();
@@ -24,6 +23,7 @@ app.use(auth);
 app.use("/admin", adminValidator, adminRouter);
 app.use("/employee", employeeValidator, employeeRouter);
 app.use("/bookings", employeeValidator, bookingRouter);
+app.use("/reports",reportRouter)
 
 app.listen(process.env.port, async () => {
   try {

@@ -5,6 +5,20 @@ const roomRegister = async (req, res) => {
   const { category, name, floor, description, seater, city, building } =
     req.body;
   try {
+    if (
+      !category ||
+      !name ||
+      !floor ||
+      !description ||
+      !seater ||
+      !city ||
+      !building
+    ) {
+      return res.status(400).json({
+        error: "Missing fields, unable to process the request",
+      });
+    }
+
     const room = new RoomModel({
       category,
       name,
@@ -17,34 +31,47 @@ const roomRegister = async (req, res) => {
     await room.save();
     res.status(200).send({ msg: "New room has been registered" });
   } catch (err) {
-    res.status(400).send({ err: err.message });
+    console.error("Error in roomRegister:", err);
+    res.status(500).send({ error: "Internal server error" });
   }
 };
 
 const usersData = async (req, res) => {
   try {
-    const userObj = await UserModel.findOne({ _id: req.body.loggedInUserId });
-    const userdata = await UserModel.find({ role: "employee" });
+    const loggedInUserId = req.body.loggedInUserId; // Assuming loggedInUserId is sent in the request body
+    if (!loggedInUserId) {
+      return res.status(400).send({ error: "loggedInUserId is required" });
+    }
+
+    const userObj = await UserModel.findOne({ _id: loggedInUserId });
+    if (!userObj) {
+      return res.status(404).send({ error: "User not found" });
+    }
+
+    const userData = await UserModel.find({ role: "employee" });
+
     res.status(200).send({
-      UsersData: userdata,
+      UsersData: userData,
       user: userObj,
     });
   } catch (err) {
-    res.status(400).send({ err: err.message });
+    console.error("Error in usersData:", err);
+    res.status(500).send({ error: "Internal server error" });
   }
 };
 
 const roomsData = async (req, res) => {
   try {
-    const roomdata = await RoomModel.find({});
-    res.status(200).send(roomdata);
+    const roomData = await RoomModel.find({});
+    res.status(200).send({ rooms: roomData });
   } catch (err) {
-    res.status(400).send({ err: err.message });
+    console.error("Error in roomsData:", err);
+    res.status(500).send({ error: "Internal server error" });
   }
 };
 
 module.exports = {
   roomRegister,
   usersData,
-  roomsData
-}
+  roomsData,
+};
