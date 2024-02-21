@@ -76,7 +76,14 @@ bookingRouter.get("/cancel/:booking_id", async (req, res) => {
       return res.status(200).send({ msg: "Booking is already cancelled" });
     }
 
-    await BookingModel.findByIdAndUpdate(booking_id, { isCancelled: true });
+    const updatedBooking = await BookingModel.findByIdAndUpdate(
+      booking_id,
+      { 
+        isCancelled: true, 
+        dateCreated: Date.now() ,
+      },
+      { new: true }
+    );
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -109,6 +116,7 @@ bookingRouter.get("/cancel/:booking_id", async (req, res) => {
 
     res.status(200).send({
       msg: `Booking with _id: ${booking_id} has been cancelled. An email has been sent to all the participants.`,
+      updatedBooking,
     });
   } catch (err) {
     console.error("Error in bookingRouter:", err);
@@ -143,22 +151,21 @@ bookingRouter.patch("/update/:_booking_id", async (req, res) => {
     if (booking.isCancelled === true) {
       return res.status(400).send({ msg: "Meeting is already cancelled." });
     }
-    
-    
+
     const newBooking = {
       // user should not be able to update the date
-      Date: booking?.Date, 
+      Date: booking?.Date,
       timeIn: req.body.timeIn, //FE
       timeOut: req.body.timeOut, //FE
       bookingUserId: req.body.loggedInUserId,
-      roomId: booking?.roomId, 
-      meetingTitle: booking?.meetingTitle, 
+      roomId: booking?.roomId,
+      meetingTitle: booking?.meetingTitle,
       meetingDetails: req.body.meetingDetails, //FE
       meetingParticipants: req.body.meetingParticipants, //FE
       numberOfParticipants: req.body.numberOfParticipants, //FE
       isCancelled: booking?.isCancelled,
       new: true,
-      dateCreated: Date.now()
+      dateCreated: Date.now(),
     };
 
     // Validate required fields
@@ -195,7 +202,9 @@ bookingRouter.patch("/update/:_booking_id", async (req, res) => {
         subject: `Meeting with Title: ${updatedBooking.meetingTitle} is updated`,
         text: `Dear Sir/Mam,
         
-        This is to inform you that there have been updates made to the meeting titled: "${updatedBooking.meetingTitle}".
+        This is to inform you that there have been updates made to the meeting titled: "${
+          updatedBooking.meetingTitle
+        }".
         
         The meeting details have been modified as follows:
         
@@ -216,14 +225,14 @@ bookingRouter.patch("/update/:_booking_id", async (req, res) => {
     }
 
     res.status(200).send({
-      msg: `Booking with _id: ${updatedBooking._id} has been updated and Email has been sent to all the participants`, updatedBooking
+      msg: `Booking with _id: ${updatedBooking._id} has been updated and Email has been sent to all the participants`,
+      updatedBooking,
     });
   } catch (err) {
     console.error("Error:", err);
     res.status(500).send({ error: "Internal Server Error" });
   }
 });
-
 
 module.exports = {
   bookingRouter,

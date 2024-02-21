@@ -44,9 +44,7 @@ employeeRouter.get("/dashboard/:roomId", async (req, res) => {
       return res.status(400).send({ error: "Room ID is required" });
     }
 
-    const bookings = await BookingModel.find({ roomId , isCancelled:false});
-    
-  
+    const bookings = await BookingModel.find({ roomId, isCancelled: false });
 
     if (!bookings || bookings.length === 0) {
       return res.status(404).send({ error: "No bookings found for this room" });
@@ -65,6 +63,31 @@ employeeRouter.get("/dashboard/:roomId", async (req, res) => {
   }
 });
 
+employeeRouter.get("/dashboard/monthlybookings/:roomId/:month", async (req, res) => {
+    const { roomId, month } = req.params;
+    try {
+      if (!roomId || !month) {
+        return res.status(400).send({ error: "Room ID and selected month are required" });
+      }
+
+      const bookings = await BookingModel.find({ roomId, isCancelled: false });
+      const bookingsOnTargetMonth = bookings?.filter((booking) => {
+        const [day, bookingMonth, year] = booking.Date.split(" ").map(Number);
+        return bookingMonth == month;
+      });
+
+      if (bookingsOnTargetMonth.length === 0) {
+        return res.status(200).send({ msg: "There are no bookings on this particular month" });
+      }
+
+      res.status(200).send({ bookings: bookingsOnTargetMonth });
+    } catch (err) {
+      console.error("Error in /dashboard/bookingsMonthWise/:roomId/:month endpoint:",err);
+      res.status(500).send({ error: "Internal server error" });
+    }
+  }
+);
+
 employeeRouter.get("/dashboard/:roomId/:selectedDate", async (req, res) => {
   const { roomId, selectedDate } = req.params;
   try {
@@ -74,7 +97,7 @@ employeeRouter.get("/dashboard/:roomId/:selectedDate", async (req, res) => {
         .send({ error: "Room ID and selected date are required" });
     }
 
-    const bookings = await BookingModel.find({ roomId, isCancelled:false });
+    const bookings = await BookingModel.find({ roomId, isCancelled: false });
     const bookingsOnTargetDate = bookings.filter(
       (booking) => booking.Date === selectedDate
     );
@@ -125,22 +148,19 @@ employeeRouter.post("/dashboard/:roomId", async (req, res) => {
       Date,
       $or: [
         {
-          $and: [
-            { timeIn: { $lte: timeIn } },
-            { timeOut: { $gt: timeIn } }
-          ]
+          $and: [{ timeIn: { $lte: timeIn } }, { timeOut: { $gt: timeIn } }],
         },
         {
-          $and: [
-            { timeIn: { $lt: timeOut } },
-            { timeOut: { $gte: timeOut } }
-          ]
-        }
-      ]
+          $and: [{ timeIn: { $lt: timeOut } }, { timeOut: { $gte: timeOut } }],
+        },
+      ],
     });
 
     if (existingBooking) {
-      return res.status(400).send({ error: "There is a conflicting booking for the same room and time slot." });
+      return res.status(400).send({
+        error:
+          "There is a conflicting booking for the same room and time slot.",
+      });
     }
 
     const bookingObj = {
@@ -154,8 +174,8 @@ employeeRouter.post("/dashboard/:roomId", async (req, res) => {
       meetingParticipants, // From FE
       numberOfParticipants, // From FE
       isCancelled: false, // Created Here only
-      new:false, // Created Here only
-      dateCreated:Date.now // Created Here only
+      new: false, // Created Here only
+      dateCreated: Date.now, // Created Here only
     };
 
     const booking = new BookingModel(bookingObj);

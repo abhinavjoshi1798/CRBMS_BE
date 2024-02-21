@@ -8,15 +8,9 @@ const reportRouter = express.Router();
 
 reportRouter.get("/", async (req, res) => {
   try {
-    // Fetch all rooms
     const rooms = await RoomModel.find();
-
-    // Initialize an empty array to store booking counts for all rooms
     const allRoomsBookingCounts = [];
-
-    // Iterate over each room
     for (const room of rooms) {
-      // Fetch bookings for the current room that are not cancelled
       const bookingCounts = await BookingModel.aggregate([
         {
           $match: { roomId: room._id.toString(), isCancelled: false },
@@ -27,7 +21,7 @@ reportRouter.get("/", async (req, res) => {
               $dateFromString: {
                 dateString: {
                   $concat: [
-                    { $arrayElemAt: [{ $split: ["$Date", " "] }, 2] }, // Year
+                    { $arrayElemAt: [{ $split: ["$Date", " "] }, 2] },
                     "-",
                     {
                       $switch: {
@@ -167,9 +161,9 @@ reportRouter.get("/", async (req, res) => {
                         ],
                         default: "01",
                       },
-                    }, // Month
+                    },
                     "-",
-                    { $arrayElemAt: [{ $split: ["$Date", " "] }, 0] }, // Day
+                    { $arrayElemAt: [{ $split: ["$Date", " "] }, 0] },
                   ],
                 },
               },
@@ -194,10 +188,8 @@ reportRouter.get("/", async (req, res) => {
           $sort: { year: 1, month: 1 },
         },
       ]);
-
-      // Push booking counts for the current room to the array
       allRoomsBookingCounts.push({
-        room: room.name, // Assuming room has a name field, you can change this as per your schema
+        room: room.name,
         bookingCounts,
       });
     }
