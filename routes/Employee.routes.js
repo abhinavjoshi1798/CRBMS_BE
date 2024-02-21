@@ -88,30 +88,7 @@ employeeRouter.get("/dashboard/monthlybookings/:roomId/:month", async (req, res)
   }
 );
 
-employeeRouter.get("/dashboard/usermonthlybookings/:userId/:month", async (req, res) => {
-  const { userId, month } = req.params;
-  try {
-    if (!userId || !month) {
-      return res.status(400).send({ error: "user ID and selected month are required" });
-    }
 
-    const bookings = await BookingModel.find({ "bookingUserId":userId, isCancelled: false });
-    const bookingsOnTargetMonth = bookings?.filter((booking) => {
-      const [day, bookingMonth, year] = booking.Date.split(" ").map(Number);
-      return bookingMonth == month;
-    });
-
-    if (bookingsOnTargetMonth.length === 0) {
-      return res.status(200).send({ msg: "There are no bookings on this particular month" });
-    }
-
-    res.status(200).send({ bookings: bookingsOnTargetMonth });
-  } catch (err) {
-    console.error("Error in /dashboard/bookingsMonthWise/:roomId/:month endpoint:",err);
-    res.status(500).send({ error: "Internal server error" });
-  }
-}
-);
 
 employeeRouter.get("/dashboard/:roomId/:selectedDate", async (req, res) => {
   const { roomId, selectedDate } = req.params;
