@@ -23,7 +23,7 @@ app.use(auth);
 app.use("/admin", adminValidator, adminRouter);
 app.use("/employee", employeeValidator, employeeRouter);
 app.use("/bookings", employeeValidator, bookingRouter);
-app.use("/reports",reportRouter)
+app.use("/reports",adminValidator,reportRouter)
 
 app.listen(process.env.port, async () => {
   try {

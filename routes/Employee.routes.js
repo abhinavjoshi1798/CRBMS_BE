@@ -66,33 +66,40 @@ employeeRouter.get("/dashboard/:roomId", async (req, res) => {
 employeeRouter.get("/dashboard/monthlybookings/:roomId/:month", async (req, res) => {
     const { roomId, month } = req.params;
     try {
-      if(!roomId || !month || month.length != 2){
-       return res.status(400).send({msg:"RoomId or Month must be needed"})
-      }      
-   
+      if (!roomId || !month || month.length != 2) {
+        return res.status(400).send({ msg: "RoomId or Month must be needed" });
+      }
+
       const bookings = await BookingModel.find({ roomId, isCancelled: false });
-      if(bookings.length === 0){
-        return res.status(400).send({msg:"There are no bookings for the particular room"})
-      }     
+      if (bookings.length === 0) {
+        return res
+          .status(400)
+          .send({ msg: "There are no bookings for the particular room" });
+      }
 
       const bookingsOnTargetMonth = bookings.filter((booking) => {
-        let [day, bookingMonth, year] = booking.Date.split(" ");
+        let [day, bookingMonth, year] = booking.Date.split("-");
         return bookingMonth === month;
       });
 
-      if(bookingsOnTargetMonth.length === 0 ){
-        return res.status(400).send({msg:"There are no bookings for given room for the particular month"})
+      if (bookingsOnTargetMonth.length === 0) {
+        return res
+          .status(400)
+          .send({
+            msg: "There are no bookings for given room for the particular month",
+          });
       }
-     
+
       res.status(200).send({ bookings: bookingsOnTargetMonth });
     } catch (err) {
-      console.error("Error in /dashboard/bookingsMonthWise/:roomId/:month endpoint:",err);
+      console.error(
+        "Error in /dashboard/bookingsMonthWise/:roomId/:month endpoint:",
+        err
+      );
       res.status(500).send({ error: "Internal server error" });
     }
   }
 );
-
-
 
 employeeRouter.get("/dashboard/:roomId/:selectedDate", async (req, res) => {
   const { roomId, selectedDate } = req.params;
