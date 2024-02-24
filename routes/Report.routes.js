@@ -61,10 +61,10 @@ reportRouter.get("/", async (req, res) => {
     }
 
     const Bookings = await BookingModel.find();
-    const totalBookings = Bookings.length;
+    const totalBookings = Bookings?.length;
 
     const users = await UserModel.find();
-    const totalUsers = users.length;
+    const totalUsers = users?.length;
     let noOfAdmin = 0,
       noOfEmployee = 0;
     users?.forEach((el) => {
@@ -77,7 +77,7 @@ reportRouter.get("/", async (req, res) => {
     });
 
     const roomsData = await RoomModel.find();
-    const totalRooms = roomsData.length;
+    const totalRooms = roomsData?.length;
     let noOfConferenceRoom = 0,
       noOfMeetingRoom = 0;
     roomsData?.forEach((el) => {
@@ -89,9 +89,8 @@ reportRouter.get("/", async (req, res) => {
       }
     });
 
-    // ----------------------------------------------------------------------------------
     const { page = 1 } = req.query;
-    const limit = 2; // Number of bookings per page
+    const limit = 10; // Number of bookings per page
     const skip = (page - 1) * limit;
 
     const bookings = await BookingModel.find().skip(skip).limit(limit);
@@ -129,15 +128,11 @@ reportRouter.get("/", async (req, res) => {
       })
     );
 
-    
-
-
     bookingsWithDetails.sort((a, b) => {
       const dateTimeA = moment(`${a.Date} ${a.timeIn}`, "DD-MM-YYYY hh:mm A");
       const dateTimeB = moment(`${b.Date} ${b.timeIn}`, "DD-MM-YYYY hh:mm A");
       return dateTimeB.diff(dateTimeA);
     });
-
 
     const totalPages = Math.ceil(totalBookings / limit);
 
