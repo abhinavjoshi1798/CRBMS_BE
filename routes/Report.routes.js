@@ -65,8 +65,7 @@ reportRouter.get("/", async (req, res) => {
 
     const users = await UserModel.find();
     const totalUsers = users?.length;
-    let noOfAdmin = 0,
-      noOfEmployee = 0;
+    let noOfAdmin = 0, noOfEmployee = 0;
     users?.forEach((el) => {
       if (el.role === "employee") {
         noOfEmployee++;
@@ -88,7 +87,8 @@ reportRouter.get("/", async (req, res) => {
         noOfMeetingRoom++;
       }
     });
-    const limit = 10; // Number of bookings per page
+
+    const limit = 10;
     const totalPages = Math.ceil(totalBookings / limit);
     let { page = 1 } = req.query;
     if (page < 1) {
