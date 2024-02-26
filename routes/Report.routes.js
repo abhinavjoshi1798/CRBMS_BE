@@ -88,9 +88,16 @@ reportRouter.get("/", async (req, res) => {
         noOfMeetingRoom++;
       }
     });
-
-    const { page = 1 } = req.query;
     const limit = 10; // Number of bookings per page
+    const totalPages = Math.ceil(totalBookings / limit);
+    let { page = 1 } = req.query;
+    if (page < 1) {
+      page = 1;
+    }
+    if (page > totalPages) {
+      page = totalPages;
+    }
+
     const skip = (page - 1) * limit;
 
     const bookings = await BookingModel.find().skip(skip).limit(limit);
@@ -133,8 +140,6 @@ reportRouter.get("/", async (req, res) => {
       const dateTimeB = moment(`${b.Date} ${b.timeIn}`, "DD-MM-YYYY hh:mm A");
       return dateTimeB.diff(dateTimeA);
     });
-
-    const totalPages = Math.ceil(totalBookings / limit);
 
     res.status(200).send({
       Bookings: bookingsWithDetails,
