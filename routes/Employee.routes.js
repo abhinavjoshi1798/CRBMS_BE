@@ -83,11 +83,9 @@ employeeRouter.get("/dashboard/monthlybookings/:roomId/:month", async (req, res)
       });
 
       if (bookingsOnTargetMonth.length === 0) {
-        return res
-          .status(400)
-          .send({
-            msg: "There are no bookings for given room for the particular month",
-          });
+        return res.status(400).send({
+          msg: "There are no bookings for given room for the particular month",
+        });
       }
 
       res.status(200).send({ bookings: bookingsOnTargetMonth });
@@ -156,24 +154,40 @@ employeeRouter.post("/dashboard/:roomId", async (req, res) => {
         .send({ error: "Missing required fields for booking" });
     }
 
-    const existingBooking = await BookingModel.findOne({
+    const existingBookings = await BookingModel.find({
       roomId,
       Date,
-      $or: [
-        {
-          $and: [{ timeIn: { $lte: timeIn } }, { timeOut: { $gt: timeIn } }],
-        },
-        {
-          $and: [{ timeIn: { $lt: timeOut } }, { timeOut: { $gte: timeOut } }],
-        },
-      ],
+      isCancelled: false
     });
 
-    if (existingBooking) {
-      return res.status(400).send({
-        error:
-          "There is a conflicting booking for the same room and time slot.",
-      });
+    const newTimeIn = moment(`${Date} ${timeIn}`, "DD-MM-YYYY hh:mm A");
+    const newTimeOut = moment(`${Date} ${timeOut}`, "DD-MM-YYYY hh:mm A");
+
+    for (const existingBooking of existingBookings) {
+      const existingTimeIn = moment(
+        `${existingBooking.Date} ${existingBooking.timeIn}`,
+        "DD-MM-YYYY hh:mm A"
+      );
+      const existingTimeOut = moment(
+        `${existingBooking.Date} ${existingBooking.timeOut}`,
+        "DD-MM-YYYY hh:mm A"
+      );
+
+      if (
+        (newTimeIn.isSameOrAfter(existingTimeIn) &&
+          newTimeIn.isBefore(existingTimeOut)) ||
+        (newTimeOut.isAfter(existingTimeIn) &&
+          newTimeOut.isSameOrBefore(existingTimeOut)) ||
+        (newTimeIn.isSameOrBefore(existingTimeIn) &&
+          newTimeOut.isSameOrAfter(existingTimeOut))
+      ) {
+        return res
+          .status(400)
+          .send({
+            error:
+              "There is a conflicting booking for the same room and time slot.",
+          });
+      }
     }
 
     const bookingObj = {

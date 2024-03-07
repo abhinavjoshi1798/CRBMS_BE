@@ -48,7 +48,7 @@ const usersData = async (req, res) => {
       return res.status(404).send({ error: "User not found" });
     }
 
-    const userData = await UserModel.find({ role: "employee" });
+    const userData = await UserModel.find();
 
     res.status(200).send({
       UsersData: userData,

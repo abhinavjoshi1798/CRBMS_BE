@@ -11,11 +11,21 @@ const bookingRouter = express.Router();
 bookingRouter.get("/:userId", async (req, res) => {
   const { userId } = req.params;
   try {
+    if (!userId) {
+      return res.status(400).send({
+        err: "user Id is required in params",
+      });
+    }
+
     const bookings = await BookingModel.find({
       bookingUserId: userId,
-      isCancelled: false,
     });
 
+    if (bookings.length === 0) {
+      return res.status(404).send({ message: "Bookings not found" });
+    }
+
+    // Fetch details of each booking including room and user details
     const bookingsWithDetails = await Promise.all(
       bookings.map(async (booking) => {
         const room = await RoomModel.findById(booking.roomId);
@@ -49,13 +59,53 @@ bookingRouter.get("/:userId", async (req, res) => {
       })
     );
 
-    bookingsWithDetails.sort((a, b) => {
+    // Separate bookings into upcoming, previous, and cancelled
+    const currentDateTime = moment();
+    const upcomingBookings = [];
+    const previousBookings = [];
+    const cancelledBookings = [];
+
+    bookingsWithDetails.forEach((booking) => {
+      const bookingDateTime = moment(
+        `${booking.Date} ${booking.timeIn}`,
+        "DD-MM-YYYY hh:mm A"
+      );
+
+      if (booking.isCancelled) {
+        cancelledBookings.push(booking);
+      } else if (bookingDateTime.isSameOrAfter(currentDateTime)) {
+        upcomingBookings.push(booking);
+      } else {
+        previousBookings.push(booking);
+      }
+    });
+
+    // Sort upcoming bookings in ascending order
+    upcomingBookings.sort((a, b) => {
+      const dateTimeA = moment(`${a.Date} ${a.timeIn}`, "DD-MM-YYYY hh:mm A");
+      const dateTimeB = moment(`${b.Date} ${b.timeIn}`, "DD-MM-YYYY hh:mm A");
+      return dateTimeA.diff(dateTimeB);
+    });
+
+    // Sort previous bookings in descending order
+    previousBookings.sort((a, b) => {
       const dateTimeA = moment(`${a.Date} ${a.timeIn}`, "DD-MM-YYYY hh:mm A");
       const dateTimeB = moment(`${b.Date} ${b.timeIn}`, "DD-MM-YYYY hh:mm A");
       return dateTimeB.diff(dateTimeA);
     });
 
-    res.status(200).send({ Bookings: bookingsWithDetails });
+    // Sort cancelled bookings in descending order
+    cancelledBookings.sort((a, b) => {
+      const dateTimeA = moment(`${a.Date} ${a.timeIn}`, "DD-MM-YYYY hh:mm A");
+      const dateTimeB = moment(`${b.Date} ${b.timeIn}`, "DD-MM-YYYY hh:mm A");
+      return dateTimeB.diff(dateTimeA);
+    });
+
+    res.status(200).send({
+      upcomingBookings,
+      previousBookings,
+      cancelledBookings,
+    });
   } catch (err) {
     console.error("Error in bookingRouter:", err);
     res.status(500).send({ error: "Internal server error" });
@@ -78,9 +128,9 @@ bookingRouter.get("/cancel/:booking_id", async (req, res) => {
 
     const updatedBooking = await BookingModel.findByIdAndUpdate(
       booking_id,
-      { 
-        isCancelled: true, 
-        dateCreated: Date.now() ,
+      {
+        isCancelled: true,
+        dateCreated: Date.now(),
       },
       { new: true }
     );

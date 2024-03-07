@@ -60,8 +60,8 @@ reportRouter.get("/", async (req, res) => {
       });
     }
 
-    const Bookings = await BookingModel.find();
-    const totalBookings = Bookings?.length;
+    
+    const totalBookings = await BookingModel.countDocuments({ isCancelled: false });
 
     const users = await UserModel.find();
     const totalUsers = users?.length;
