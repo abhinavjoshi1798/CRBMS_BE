@@ -1,6 +1,7 @@
 const { RoomModel } = require("../model/Room.model");
 const { UserModel } = require("../model/User.model");
 const { dateConstructor, formatDate } = require("./dateController");
+const bcrypt = require("bcrypt");
 
 const roomRegister = async (req, res) => {
   const { category, name, floor, description, seater, city, building } =
@@ -166,10 +167,92 @@ const deleteRoom = async (req, res) => {
   }
 };
 
+const editUser = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const { name, email, pass, role, employeeId, city, building } = req.body;
+
+    if (
+      !name ||
+      !email ||
+      !pass ||
+      !role ||
+      !employeeId ||
+      !city ||
+      !building
+    ) {
+      return res.status(400).send({ msg: "Required fields are missing" });
+    }
+
+    // Hash the password using bcrypt
+    const hash = await bcrypt.hash(pass, 5);
+
+    const timestamp = dateConstructor();
+    const formattedDate = formatDate(timestamp);
+
+    // Create a new user instance
+    const newUser = await UserModel.findByIdAndUpdate(
+      { _id: userId },
+      {
+        name,
+        email,
+        pass: hash,
+        role,
+        employeeId,
+        city,
+        building,
+        new: true,
+        dateCreated: formattedDate,
+        isDeleted: false,
+      },
+      { new: true }
+    );
+
+    // Respond with success message
+    res.status(200).send({ msg: "User details has been Updated", newUser });
+  } catch (err) {
+    console.log("error from editUser: ", err);
+    res.status(500).send({ error: "Internal server error" });
+  }
+};
+
+const deleteUser = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    if (!userId) {
+      return res.status(400).send({ err: "userId is not available in params" });
+    }
+    const deletedUser = await UserModel.findByIdAndUpdate(
+      { _id: userId },
+      {
+        isDeleted: true,
+      },
+      {
+        new: true,
+      }
+    );
+
+    if (!deletedUser) {
+      return res
+        .status(400)
+        .send({ msg: "user with the given userId is not available in DB" });
+    }
+
+    res
+      .status(200)
+      .send({ msg: `user with id ${userId} is deleted`, deletedUser });
+  } catch (err) {
+    console.log("error from deleteUser: ", err);
+    res.status(500).send({ error: "Internal server error" });
+  }
+};
+
 module.exports = {
   roomRegister,
   usersData,
   roomsData,
   editRoom,
   deleteRoom,
+  editUser,
+  deleteUser,
 };

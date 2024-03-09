@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const { UserModel } = require("../model/User.model");
 const jwt = require("jsonwebtoken");
+const { dateConstructor, formatDate } = require("./dateController");
 require("dotenv").config();
 
 const userRegistration = async (req, res) => {
@@ -9,6 +10,9 @@ const userRegistration = async (req, res) => {
 
     // Hash the password using bcrypt
     const hash = await bcrypt.hash(pass, 5);
+
+    const timestamp = dateConstructor();
+    const formattedDate = formatDate(timestamp);
 
     // Create a new user instance
     const user = new UserModel({
@@ -19,6 +23,9 @@ const userRegistration = async (req, res) => {
       employeeId,
       city,
       building,
+      new:false,
+      dateCreated:formattedDate,
+      isDeleted:false,
     });
 
     // Save the user to the database
