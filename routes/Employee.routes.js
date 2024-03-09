@@ -6,6 +6,7 @@ const { UserModel } = require("../model/User.model");
 const { BookingModel } = require("../model/Booking.model");
 
 const nodemailer = require("nodemailer");
+const { formatDate, dateConstructor } = require("../controllers/dateController");
 
 const employeeRouter = express.Router();
 
@@ -157,7 +158,7 @@ employeeRouter.post("/dashboard/:roomId", async (req, res) => {
     const existingBookings = await BookingModel.find({
       roomId,
       Date,
-      isCancelled: false
+      isCancelled: false,
     });
 
     const newTimeIn = moment(`${Date} ${timeIn}`, "DD-MM-YYYY hh:mm A");
@@ -174,21 +175,25 @@ employeeRouter.post("/dashboard/:roomId", async (req, res) => {
       );
 
       if (
+        //newTimeIn is between the existing meeting
         (newTimeIn.isSameOrAfter(existingTimeIn) &&
           newTimeIn.isBefore(existingTimeOut)) ||
+        //newTimeOut is between existing meeting
         (newTimeOut.isAfter(existingTimeIn) &&
           newTimeOut.isSameOrBefore(existingTimeOut)) ||
+        // new meeting time includes existing meeting time
         (newTimeIn.isSameOrBefore(existingTimeIn) &&
           newTimeOut.isSameOrAfter(existingTimeOut))
       ) {
-        return res
-          .status(400)
-          .send({
-            error:
-              "There is a conflicting booking for the same room and time slot.",
-          });
+        return res.status(400).send({
+          error:
+            "There is a conflicting booking for the same room and time slot.",
+        });
       }
     }
+
+    const timestamp = dateConstructor();
+    const formattedDate = formatDate(timestamp);
 
     const bookingObj = {
       Date, // From FE
@@ -202,7 +207,7 @@ employeeRouter.post("/dashboard/:roomId", async (req, res) => {
       numberOfParticipants, // From FE
       isCancelled: false, // Created Here only
       new: false, // Created Here only
-      dateCreated: Date.now, // Created Here only
+      dateCreated: formattedDate, // Created Here only
     };
 
     const booking = new BookingModel(bookingObj);

@@ -6,7 +6,10 @@ const roomSchema = mongoose.Schema({
     description:{type:String,required:true},
     seater:{type:Number,required:true},
     city:{type:String,required:true},
-    building:{type:String,required:true}
+    building:{type:String,required:true},
+    new:{type:Boolean,require:true},
+    dateCreated: { type: String, require: true },
+    isDeleted:{type:Boolean,require:true}
 },{
     versionKey:false
 })

@@ -7,7 +7,6 @@ const userSchema = mongoose.Schema({
     employeeId:{type:Number,required:true},
     city:{type:String,required:true},
     building:{type:String,required:true},
-    
 },{
     versionKey:false
 })

@@ -5,6 +5,10 @@ const nodemailer = require("nodemailer");
 const { RoomModel } = require("../model/Room.model");
 const { roomsData } = require("../controllers/adminController");
 const { UserModel } = require("../model/User.model");
+const {
+  dateConstructor,
+  formatDate,
+} = require("../controllers/dateController");
 
 const bookingRouter = express.Router();
 
@@ -202,6 +206,9 @@ bookingRouter.patch("/update/:_booking_id", async (req, res) => {
       return res.status(400).send({ msg: "Meeting is already cancelled." });
     }
 
+    const timestamp = dateConstructor();
+    const formattedDate = formatDate(timestamp);
+
     const newBooking = {
       // user should not be able to update the date
       Date: booking?.Date,
@@ -215,7 +222,7 @@ bookingRouter.patch("/update/:_booking_id", async (req, res) => {
       numberOfParticipants: req.body.numberOfParticipants, //FE
       isCancelled: booking?.isCancelled,
       new: true,
-      dateCreated: Date.now(),
+      dateCreated: formattedDate,
     };
 
     // Validate required fields
@@ -252,13 +259,11 @@ bookingRouter.patch("/update/:_booking_id", async (req, res) => {
         subject: `Meeting with Title: ${updatedBooking.meetingTitle} is updated`,
         text: `Dear Sir/Mam,
         
-        This is to inform you that there have been updates made to the meeting titled: "${
-          updatedBooking.meetingTitle
-        }".
+        This is to inform you that there have been updates made to the meeting titled: "${updatedBooking.meetingTitle}".
         
         The meeting details have been modified as follows:
         
-        - Date: ${new Date(updatedBooking.Date).toDateString()}
+        - Date: ${updatedBooking.Date}
         - Time: ${updatedBooking.timeIn} to ${updatedBooking.timeOut}
         - Meeting Details: ${updatedBooking.meetingDetails}
         

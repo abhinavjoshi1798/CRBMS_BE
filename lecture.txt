@@ -22,3 +22,4 @@ one user can create many notes
 notes collection will depend upon user collection 
 if the user does not exist notes cannot exist
 =>userID will present inside notes collection
+

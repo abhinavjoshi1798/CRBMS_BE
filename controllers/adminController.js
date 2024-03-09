@@ -1,5 +1,6 @@
 const { RoomModel } = require("../model/Room.model");
 const { UserModel } = require("../model/User.model");
+const { dateConstructor, formatDate } = require("./dateController");
 
 const roomRegister = async (req, res) => {
   const { category, name, floor, description, seater, city, building } =
@@ -19,6 +20,9 @@ const roomRegister = async (req, res) => {
       });
     }
 
+    const timestamp = dateConstructor();
+    const formattedDate = formatDate(timestamp);
+
     const room = new RoomModel({
       category,
       name,
@@ -27,6 +31,9 @@ const roomRegister = async (req, res) => {
       seater,
       city,
       building,
+      dateCreated: formattedDate,
+      isDeleted: false,
+      new: false,
     });
     await room.save();
     res.status(200).send({ msg: "New room has been registered" });
@@ -70,8 +77,99 @@ const roomsData = async (req, res) => {
   }
 };
 
+const editRoom = async (req, res) => {
+  const { roomId } = req.params;
+  try {
+    const room = await RoomModel.findById(roomId);
+    if (!room) {
+      return res.status(404).send({ error: "Room not found" });
+    }
+
+    const { category, name, floor, description, seater, city, building } =
+      req.body;
+
+    const timestamp = dateConstructor();
+    const formattedDate = formatDate(timestamp);
+
+    const newRoom = {
+      category,
+      name,
+      floor,
+      description,
+      seater,
+      city,
+      building,
+      new: true,
+      dateCreated: formattedDate,
+      isDeleted: false,
+    };
+
+    // Validate required fields
+    if (
+      !newRoom.name ||
+      !newRoom.category ||
+      !newRoom.floor ||
+      !newRoom.description ||
+      !newRoom.seater ||
+      !newRoom.city ||
+      !newRoom.building
+    ) {
+      return res.status(400).send({ error: "Missing required fields" });
+    }
+
+    const updatedRoom = await RoomModel.findOneAndUpdate(
+      { _id: roomId },
+      newRoom,
+      { new: true }
+    );
+
+    res.status(200).send({
+      msg: `room details with _id: ${updatedRoom._id} has been updated`,
+      updatedRoom,
+    });
+  } catch (err) {
+    console.log("error from editRoom: ", err);
+    res.status(500).send({ error: "Internal server error" });
+  }
+};
+
+const deleteRoom = async (req, res) => {
+  const { roomId } = req.params;
+  try {
+    const room = await RoomModel.findById(roomId);
+    if (!room) {
+      res.status(400).send({ msg: "room is not available in DB" });
+    }
+    if (room.isDeleted) {
+      res.status(200).send({ msg: "room is already deleted" });
+    }
+
+    const timestamp = dateConstructor();
+    const formattedDate = formatDate(timestamp);
+
+    const deletedRoom = await RoomModel.findByIdAndUpdate(
+      { _id: roomId },
+      {
+        isDeleted: true,
+        dateCreated: formattedDate,
+      },
+      { new: true }
+    );
+
+    res.status(200).send({
+      msg: `room has been deleted`,
+      deletedRoom,
+    });
+  } catch (err) {
+    console.log("error from deleteRoom: ", err);
+    res.status(500).send({ error: "Internal server error" });
+  }
+};
+
 module.exports = {
   roomRegister,
   usersData,
   roomsData,
+  editRoom,
+  deleteRoom,
 };
