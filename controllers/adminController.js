@@ -292,4 +292,3 @@ module.exports = {
   singleRoomData,
   singleUserData
 };
-//
