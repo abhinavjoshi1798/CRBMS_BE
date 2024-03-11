@@ -249,37 +249,41 @@ const deleteUser = async (req, res) => {
 
 const singleRoomData = async (req, res) => {
   const { roomId } = req.params;
-  try{
- const roomData = await RoomModel.findById(roomId);
- if(!roomData){
-  return res.status(400).send({"msg":"Room id is required in params"})
- }
- res.status(200).send({roomData});
-
-
-
-  }catch(err){
+  try {
+    if (!roomId) {
+      return res.status(400).send({ msg: "roomId must be present in params" });
+    }
+    const roomData = await RoomModel.findById(roomId);
+    if (!roomData) {
+      return res
+        .status(400)
+        .send({ msg: "Room for the given room Id is not available in DB" });
+    }
+    res.status(200).send({ roomData });
+  } catch (err) {
     console.log("error from singleRoomData: ", err);
     res.status(500).send({ error: "Internal server error" });
   }
-}
+};
 
-const singleUserData = async (req,res) => {
+const singleUserData = async (req, res) => {
   const { userId } = req.params;
-  try{
- const userData = await UserModel.findById(userId);
- if(!userData){
-  return res.status(400).send({"msg":"Room id is required in params"})
- }
- res.status(200).send({userData});
-
-
-
-  }catch(err){
+  try {
+    if (!userId) {
+      return res.status(400).send({ msg: "userId must be present in params" });
+    }
+    const userData = await UserModel.findById(userId);
+    if (!userData) {
+      return res
+        .status(400)
+        .send({ msg: "User for the given userId is not available in DB" });
+    }
+    res.status(200).send({ userData });
+  } catch (err) {
     console.log("error from singleUserData: ", err);
     res.status(500).send({ error: "Internal server error" });
   }
-}
+};
 
 module.exports = {
   roomRegister,
@@ -290,5 +294,5 @@ module.exports = {
   editUser,
   deleteUser,
   singleRoomData,
-  singleUserData
+  singleUserData,
 };
