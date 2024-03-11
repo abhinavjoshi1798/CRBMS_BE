@@ -247,6 +247,40 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const singleRoomData = async (req, res) => {
+  const { roomId } = req.params;
+  try{
+ const roomData = await RoomModel.findById(roomId);
+ if(!roomData){
+  return res.status(400).send({"msg":"Room id is required in params"})
+ }
+ res.status(200).send({roomData});
+
+
+
+  }catch(err){
+    console.log("error from singleRoomData: ", err);
+    res.status(500).send({ error: "Internal server error" });
+  }
+}
+
+const singleUserData = async (req,res) => {
+  const { userId } = req.params;
+  try{
+ const userData = await UserModel.findById(userId);
+ if(!userData){
+  return res.status(400).send({"msg":"Room id is required in params"})
+ }
+ res.status(200).send({userData});
+
+
+
+  }catch(err){
+    console.log("error from singleUserData: ", err);
+    res.status(500).send({ error: "Internal server error" });
+  }
+}
+
 module.exports = {
   roomRegister,
   usersData,
@@ -255,4 +289,6 @@ module.exports = {
   deleteRoom,
   editUser,
   deleteUser,
+  singleRoomData,
+  singleUserData
 };

@@ -3,7 +3,7 @@ const express = require("express");
 const { userRegistration } = require("../controllers/userController");
 const { userRegisterValidator } = require("../middleware/userRegisterValidator.middleware");
 const { roomRegisterValidator } = require("../middleware/roomRegisterValidator");
-const { roomRegister, usersData, roomsData, editRoom, deleteRoom, editUser, deleteUser } = require("../controllers/adminController");
+const { roomRegister, usersData, roomsData, editRoom, deleteRoom, editUser, deleteUser, singleRoomData, singleUserData } = require("../controllers/adminController");
 
 const adminRouter = express.Router();
 
@@ -15,11 +15,17 @@ adminRouter.get("/userdata", usersData);
 
 adminRouter.get("/roomsdata", roomsData);
 
+//single room dat
+adminRouter.get("/room/:roomId", singleRoomData);
+
 //edit room
 adminRouter.post("/editroom/:roomId", editRoom)
 
 //delete room
 adminRouter.get("/deleteroom/:roomId", deleteRoom)
+
+//single user data
+adminRouter.get("/users/:userId", singleUserData),
 
 //edit user
 adminRouter.post("/edituser/:userId", editUser);
