@@ -171,11 +171,12 @@ const deleteRoom = async (req, res) => {
 const editUser = async (req, res) => {
   const { userId } = req.params;
   try {
-    const { name, email, role, employeeId, city, building } = req.body;
+    const { name, email, pass, role, employeeId, city, building } = req.body;
 
     if (
       !name ||
       !email ||
+      !pass ||
       !role ||
       !employeeId ||
       !city ||
@@ -184,7 +185,8 @@ const editUser = async (req, res) => {
       return res.status(400).send({ msg: "Required fields are missing" });
     }
 
-    
+    // Hash the password using bcrypt
+    const hash = await bcrypt.hash(pass, 5);
 
     const timestamp = dateConstructor();
     const formattedDate = formatDate(timestamp);
@@ -195,6 +197,7 @@ const editUser = async (req, res) => {
       {
         name,
         email,
+        pass: hash,
         role,
         employeeId,
         city,
