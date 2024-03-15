@@ -295,12 +295,12 @@ const importUser = async (req, res) => {
 
     const hashedUserData = await Promise.all(
       userData.map(async (user) => {
-        const hash = await bcrypt.hash(user.Password, 5);
+        const hash = await bcrypt.hash("pass@123", 5);
         return {
           name: user.Name,
           email: user.Email,
           pass: hash,
-          role: user.Role,
+          role: "employee",
           employeeId: user.EmployeeId,
           city: user.City,
           building: user.Building,
