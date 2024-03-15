@@ -2,6 +2,7 @@ const { RoomModel } = require("../model/Room.model");
 const { UserModel } = require("../model/User.model");
 const { dateConstructor, formatDate } = require("./dateController");
 const bcrypt = require("bcrypt");
+var csv = require("csvtojson");
 
 const roomRegister = async (req, res) => {
   const { category, name, floor, description, seater, city, building } =
@@ -285,6 +286,39 @@ const singleUserData = async (req, res) => {
   }
 };
 
+const importUser = async (req, res) => {
+  try {
+    var userData = [];
+
+    const timestamp = dateConstructor();
+    const formattedDate = formatDate(timestamp);
+
+    csv()
+      .fromFile(req.file.path)
+      .then(async (response) => {
+        for (var x = 0; x < response.length; x++) {
+          userData.push({
+            name: response[x].Name,
+            email: response[x].Email,
+            pass: response[x].Password,
+            role: response[x].Role,
+            employeeId: response[x].EmployeeId,
+            city:response[x].City,
+            building:response[x].Building,
+            new:false,
+            isDeleted:false,
+            dateCreated:formattedDate
+          });
+        }
+        await UserModel.insertMany(userData);
+      });
+
+    res.send({ status: 200, msg: "users from csv imported" });
+  } catch (error) {
+    res.status(400).send({ msg: error.message });
+  }
+};
+
 module.exports = {
   roomRegister,
   usersData,
@@ -295,4 +329,5 @@ module.exports = {
   deleteUser,
   singleRoomData,
   singleUserData,
+  importUser,
 };
