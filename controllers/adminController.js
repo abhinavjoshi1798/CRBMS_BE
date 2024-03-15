@@ -288,34 +288,33 @@ const singleUserData = async (req, res) => {
 
 const importUser = async (req, res) => {
   try {
-    var userData = [];
-
     const timestamp = dateConstructor();
     const formattedDate = formatDate(timestamp);
 
-    csv()
-      .fromFile(req.file.path)
-      .then(async (response) => {
-        for (var x = 0; x < response.length; x++) {
-          userData.push({
-            name: response[x].Name,
-            email: response[x].Email,
-            pass: response[x].Password,
-            role: response[x].Role,
-            employeeId: response[x].EmployeeId,
-            city:response[x].City,
-            building:response[x].Building,
-            new:false,
-            isDeleted:false,
-            dateCreated:formattedDate
-          });
-        }
-        await UserModel.insertMany(userData);
-      });
+    const userData = await csv().fromFile(req.file.path);
+    
+    const hashedUserData = await Promise.all(userData.map(async (user) => {
+      const hash = await bcrypt.hash(user.Password, 5);
+      return {
+        name: user.Name,
+        email: user.Email,
+        pass: hash,
+        role: user.Role,
+        employeeId: user.EmployeeId,
+        city: user.City,
+        building: user.Building,
+        new: false,
+        isDeleted: false,
+        dateCreated: formattedDate
+      };
+    }));
 
-    res.send({ status: 200, msg: "users from csv imported" });
+    await UserModel.insertMany(hashedUserData);
+    
+    res.status(200).send({ status: 200, msg: "Users from CSV imported" });
   } catch (error) {
-    res.status(400).send({ msg: error.message });
+    console.error("Error importing users:", error);
+    res.status(500).send({ msg: "Error importing users" });
   }
 };
 
