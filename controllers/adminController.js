@@ -292,29 +292,66 @@ const importUser = async (req, res) => {
     const formattedDate = formatDate(timestamp);
 
     const userData = await csv().fromFile(req.file.path);
-    
-    const hashedUserData = await Promise.all(userData.map(async (user) => {
-      const hash = await bcrypt.hash(user.Password, 5);
-      return {
-        name: user.Name,
-        email: user.Email,
-        pass: hash,
-        role: user.Role,
-        employeeId: user.EmployeeId,
-        city: user.City,
-        building: user.Building,
-        new: false,
-        isDeleted: false,
-        dateCreated: formattedDate
-      };
-    }));
+
+    const hashedUserData = await Promise.all(
+      userData.map(async (user) => {
+        const hash = await bcrypt.hash(user.Password, 5);
+        return {
+          name: user.Name,
+          email: user.Email,
+          pass: hash,
+          role: user.Role,
+          employeeId: user.EmployeeId,
+          city: user.City,
+          building: user.Building,
+          new: false,
+          isDeleted: false,
+          dateCreated: formattedDate,
+        };
+      })
+    );
 
     await UserModel.insertMany(hashedUserData);
-    
+
     res.status(200).send({ status: 200, msg: "Users from CSV imported" });
   } catch (error) {
     console.error("Error importing users:", error);
     res.status(500).send({ msg: "Error importing users" });
+  }
+};
+
+const editUserPassword = async (req, res) => {
+  const { userId } = req.params;
+  const newPassword = req.body.newPassword;
+
+  try {
+    if (!userId || !newPassword) {
+      return res
+        .status(400)
+        .send({ msg: "userId in params or newPassowrd in req body missing" });
+    }
+    // Retrieve the user from the database
+    const user = await UserModel.findById(userId);
+
+    if (!user) {
+      return res.status(400).send({ msg: "User not found in db" });
+    }
+
+    // Hash the new password
+    const hash = await bcrypt.hash(newPassword, 5);
+
+    // Update the user's password in the database
+    user.pass = hash;
+    await user.save();
+
+    return res
+      .status(200)
+      .send({ success: true, message: "Password reset successfully" });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    return res
+      .status(500)
+      .send({ success: false, message: "Password reset failed" });
   }
 };
 
@@ -329,4 +366,5 @@ module.exports = {
   singleRoomData,
   singleUserData,
   importUser,
+  editUserPassword,
 };

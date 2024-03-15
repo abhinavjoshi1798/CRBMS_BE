@@ -56,9 +56,11 @@ adminRouter.post("/edituser/:userId", editUser);
 //delete user
 adminRouter.get("/deleteuser/:userId", deleteUser);
 
-
+//edit user password
+adminRouter.post("/editpassword/:userId",editUserPassword)
 
 adminRouter.post("/importuser",upload.single('file'),importUser)
+
 
 module.exports = {
   adminRouter,
