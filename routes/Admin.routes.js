@@ -3,7 +3,7 @@ const express = require("express");
 const { userRegistration } = require("../controllers/userController");
 const { userRegisterValidator } = require("../middleware/userRegisterValidator.middleware");
 const { roomRegisterValidator } = require("../middleware/roomRegisterValidator");
-const { roomRegister, usersData, roomsData, editRoom, deleteRoom, editUser, deleteUser, singleRoomData, singleUserData, importUser } = require("../controllers/adminController");
+const { roomRegister, usersData, roomsData, editRoom, deleteRoom, editUser, deleteUser, singleRoomData, singleUserData, importUser, editUserPassword } = require("../controllers/adminController");
 
 const adminRouter = express.Router();
 
